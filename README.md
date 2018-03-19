@@ -6,20 +6,19 @@ https://devcentral.f5.com/articles/protect-your-aws-api-gateway-with-f5-big-ip-w
 
 To get the tests to function you will need to install the f5-postman-workflows framework into Postman:
 
-Open Postman
-Click the ‘Import’ button
-Select ‘Import from Link’
-Enter https://raw.githubusercontent.com/0xHiteshPatel/f5-postman-workflows/master/F5_Postman_Workflows.postman_collection.json in the field
-Click the ‘Import’ button
-Navigate to your Postman Collections
-Expand the ‘F5_Postman_Workflows’ collection
-Expand the ‘Install’ folder
-Click the ‘Install/Upgrade f5-postman-workflows’ items
-Click the ‘Send’ button
-Verify the installation was successful by:
-Examine the response tests and ensure the ‘Install Successful’ test passed
-Examine your Postman Global Environment and look for a _f5_workflow_functions item populated with JavaScript code
-
+1. Open Postman
+2. Click the ‘Import’ button
+3. Select ‘Import from Link’
+4. Enter https://raw.githubusercontent.com/0xHiteshPatel/f5-postman-workflows/master/F5_Postman_Workflows.postman_collection.json in the field
+5. Click the ‘Import’ button
+6. Navigate to your Postman Collections
+7. Expand the ‘F5_Postman_Workflows’ collection
+8. Expand the ‘Install’ folder
+9. Click the ‘Install/Upgrade f5-postman-workflows’ items
+10. Click the ‘Send’ button
+11. Verify the installation was successful by:
+12. Examine the response tests and ensure the ‘Install Successful’ test passed
+13. Examine your Postman Global Environment and look for a _f5_workflow_functions item populated with JavaScript code
 
 
 You can download and import this collection and environment, fill in the required variables, and it will do all the work for you in a few seconds. You can take it a step farther and automate deployment and configuration of the BIG-IP in AWS if you want, but this simple collection assumes you already have a BIG-IP deployed and have assigned an IP that you want to use. You’ll import the collection and the environment. Open up the environment and set the variables noted below.
@@ -53,6 +52,7 @@ cert_name: You can leave this as “default.crt” for a self-signed or select a
 key_name: You can leave this as “default.key” for a self-signed or select an SSL key you uploaded to the BIG-IP
 
 waf_template: See below, if on v13.1.0 leave this the default "https://localhost/mgmt/tm/asm/policy-templates/5VfX3g0xWgWpmUXhEHQOnQ?ver=13.1.0"
+
 
 Note
 
