@@ -4,6 +4,24 @@ Postman collection and environment to quickly deploy WAF protection in front of 
 More information here:
 https://devcentral.f5.com/articles/protect-your-aws-api-gateway-with-f5-big-ip-waf-30667
 
+To get the tests to function you will need to install the f5-postman-workflows framework into Postman:
+
+Open Postman
+Click the ‘Import’ button
+Select ‘Import from Link’
+Enter https://raw.githubusercontent.com/0xHiteshPatel/f5-postman-workflows/master/F5_Postman_Workflows.postman_collection.json in the field
+Click the ‘Import’ button
+Navigate to your Postman Collections
+Expand the ‘F5_Postman_Workflows’ collection
+Expand the ‘Install’ folder
+Click the ‘Install/Upgrade f5-postman-workflows’ items
+Click the ‘Send’ button
+Verify the installation was successful by:
+Examine the response tests and ensure the ‘Install Successful’ test passed
+Examine your Postman Global Environment and look for a _f5_workflow_functions item populated with JavaScript code
+
+
+
 You can download and import this collection and environment, fill in the required variables, and it will do all the work for you in a few seconds. You can take it a step farther and automate deployment and configuration of the BIG-IP in AWS if you want, but this simple collection assumes you already have a BIG-IP deployed and have assigned an IP that you want to use. You’ll import the collection and the environment. Open up the environment and set the variables noted below.
 
 You’ll need to fill in the relevant environment variables. Here’s a quick set of definitions:
