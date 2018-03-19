@@ -1,0 +1,994 @@
+{
+	"info": {
+		"_postman_id": "1b968083-9052-4dbc-b0e7-639b0cd21656",
+		"name": "F5-AWSAPIGW-WAFDEPLOY",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authenticate",
+			"description": "Authenticate to a BIG-IP device.\n\nInput Variables:\nbigip_mgmt      BIG-IP management address\nbigip_username    Username\nbigip_password    Password\nbigip_token_timeout  [OPTIONAL] Timeout for the auth token\n\nOutput Variables:\nbigip_token      Authentication token",
+			"item": [
+				{
+					"name": "Authenticate and Obtain Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"eval(postman.getGlobalVariable(\"_f5_workflow_functions\"));",
+									"",
+									"var populate_vars = [",
+									"        {name:\"bigip_token\", value:\"token.token\"}",
+									"    ];",
+									"    ",
+									"f5_populate_env_vars(populate_vars);",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"{{bigip_username}}\",\n  \"password\": \"{{bigip_password}}\",\n  \"loginProvidername\":\"tmos\"\n}\n"
+						},
+						"url": {
+							"raw": "https://{{bigip_mgmt}}/mgmt/shared/authn/login",
+							"protocol": "https",
+							"host": [
+								"{{bigip_mgmt}}"
+							],
+							"path": [
+								"mgmt",
+								"shared",
+								"authn",
+								"login"
+							]
+						},
+						"description": "Perform authentication and populate the variable specified in the {{bigip_token_var}} variable."
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Authentication Works",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"eval(postman.getGlobalVariable(\"_f5_workflow_functions\"));",
+									"",
+									"var check_vals = [",
+									"        {path:\"token\", value:environment.bigip_token}",
+									"    ];",
+									"    ",
+									"f5_check_response(check_vals);",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{bigip_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\":\"admin\",\n    \"password\":\"admin\"\n}"
+						},
+						"url": {
+							"raw": "https://{{bigip_mgmt}}/mgmt/shared/authz/tokens/{{bigip_token}}",
+							"protocol": "https",
+							"host": [
+								"{{bigip_mgmt}}"
+							],
+							"path": [
+								"mgmt",
+								"shared",
+								"authz",
+								"tokens",
+								"{{bigip_token}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Set Authentication Token Timeout",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if(typeof environment.bigip_token_timeout === 'undefined') {",
+									"    postman.setEnvironmentVariable('bigip_token_timeout', 1200);",
+									"}"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"eval(postman.getGlobalVariable(\"_f5_workflow_functions\"));",
+									"",
+									"var check_vals = [",
+									"        {path:\"timeout\", value:environment.bigip_token_timeout}",
+									"    ];",
+									"    ",
+									"f5_check_response(check_vals);",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{bigip_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"timeout\":\"{{bigip_token_timeout}}\"\n}"
+						},
+						"url": {
+							"raw": "https://{{bigip_mgmt}}/mgmt/shared/authz/tokens/{{bigip_token}}",
+							"protocol": "https",
+							"host": [
+								"{{bigip_mgmt}}"
+							],
+							"path": [
+								"mgmt",
+								"shared",
+								"authz",
+								"tokens",
+								"{{bigip_token}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Build the Virtual Server",
+			"description": "",
+			"item": [
+				{
+					"name": "Create Transaction",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"eval(postman.getGlobalVariable(\"_f5_workflow_functions\"));",
+									"",
+									"var populate_vars = [",
+									"        {name:\"bigip_transaction_id\", value:\"transId\"}",
+									"    ];",
+									"    ",
+									"f5_populate_env_vars(populate_vars);",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{bigip_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\n}"
+						},
+						"url": {
+							"raw": "https://{{bigip_mgmt}}/mgmt/tm/transaction",
+							"protocol": "https",
+							"host": [
+								"{{bigip_mgmt}}"
+							],
+							"path": [
+								"mgmt",
+								"tm",
+								"transaction"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Rewrite",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ec7eff62-5ad7-400a-94ea-738359b22b4a",
+								"type": "text/javascript",
+								"exec": [
+									"eval(postman.getGlobalVariable(\"_f5_workflow_functions\"));",
+									"",
+									"var check_vals = [",
+									"        { ",
+									"            \"path\":\"evalOrder\",",
+									"            \"value\":\"1\"",
+									"        }",
+									"    ];",
+									"",
+									"f5_check_response(check_vals);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-F5-REST-Coordination-Id",
+								"value": "{{bigip_transaction_id}}"
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{bigip_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\":\"{{app_name}}-rewrite\",\n\t\"rewrite-mode\":\"uri-translation\",\n\t\"uriRulesReference\": {\n        \"items\": [\n            {\n                \"name\": \"apigw-rule\",\n                \"client\": {\n                    \"host\": \"{{app_dnsname}}\",\n                    \"path\": \"/\",\n                    \"scheme\": \"https\"\n                },\n                \"server\": {\n                    \"host\": \"{{aws_apigateway_dnsname}}\",\n                    \"path\": \"/\",\n                    \"scheme\": \"https\"\n                },\n                \"type\": \"request\"\n            }\n        ]\n\t}\n}"
+						},
+						"url": {
+							"raw": "https://{{bigip_mgmt}}/mgmt/tm/ltm/profile/rewrite",
+							"protocol": "https",
+							"host": [
+								"{{bigip_mgmt}}"
+							],
+							"path": [
+								"mgmt",
+								"tm",
+								"ltm",
+								"profile",
+								"rewrite"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Monitor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "8a56f76e-956c-43be-bca9-c8f8c3df2a08",
+								"type": "text/javascript",
+								"exec": [
+									"eval(postman.getGlobalVariable(\"_f5_workflow_functions\"));",
+									"",
+									"var check_vals = [",
+									"        { ",
+									"            \"path\":\"evalOrder\",",
+									"            \"value\":\"2\"",
+									"        }",
+									"    ];",
+									"",
+									"f5_check_response(check_vals);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-F5-REST-Coordination-Id",
+								"value": "{{bigip_transaction_id}}"
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{bigip_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\":\"{{app_name}}-monitor\",\n    \"send\":\"{{monitor_send_string}}\",\n    \"recv\":\"{{monitor_receive_string}}\"\n}"
+						},
+						"url": {
+							"raw": "https://{{bigip_mgmt}}/mgmt/tm/ltm/monitor/https",
+							"protocol": "https",
+							"host": [
+								"{{bigip_mgmt}}"
+							],
+							"path": [
+								"mgmt",
+								"tm",
+								"ltm",
+								"monitor",
+								"https"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Pool",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "f5d2b24f-caaa-4e9a-96bb-d7a19c6e2dfa",
+								"type": "text/javascript",
+								"exec": [
+									"eval(postman.getGlobalVariable(\"_f5_workflow_functions\"));",
+									"",
+									"var check_vals = [",
+									"        { ",
+									"            \"path\":\"evalOrder\",",
+									"            \"value\":\"3\"",
+									"        }",
+									"    ];",
+									"",
+									"f5_check_response(check_vals);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-F5-REST-Coordination-Id",
+								"value": "{{bigip_transaction_id}}"
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{bigip_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\":\"{{app_name}}-pool\",\n    \"monitor\":\"/Common/{{app_name}}-monitor\",\n    \"members\":[ {\n    \t\"fqdn\": {\n    \t\t\"autopopulate\":\"enabled\",\n    \t\t\"tmName\": \"{{aws_apigateway_dnsname}}\"\n    \t},\n    \t\"name\": \"{{aws_apigateway_dnsname}}:443\"\n    }]\n}"
+						},
+						"url": {
+							"raw": "https://{{bigip_mgmt}}/mgmt/tm/ltm/pool",
+							"protocol": "https",
+							"host": [
+								"{{bigip_mgmt}}"
+							],
+							"path": [
+								"mgmt",
+								"tm",
+								"ltm",
+								"pool"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create ClientSSL",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "2664297e-ffeb-4176-ac56-2289ebaf7ec9",
+								"type": "text/javascript",
+								"exec": [
+									"eval(postman.getGlobalVariable(\"_f5_workflow_functions\"));",
+									"",
+									"var check_vals = [",
+									"        { ",
+									"            \"path\":\"evalOrder\",",
+									"            \"value\":\"4\"",
+									"        }",
+									"    ];",
+									"",
+									"f5_check_response(check_vals);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-F5-REST-Coordination-Id",
+								"value": "{{bigip_transaction_id}}"
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{bigip_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\":\"{{app_name}}-clientssl\",\n    \"cert\":\"{{cert_name}}\",\n    \"key\":\"{{key_name}}\"\n}"
+						},
+						"url": {
+							"raw": "https://{{bigip_mgmt}}/mgmt/tm/ltm/profile/client-ssl",
+							"protocol": "https",
+							"host": [
+								"{{bigip_mgmt}}"
+							],
+							"path": [
+								"mgmt",
+								"tm",
+								"ltm",
+								"profile",
+								"client-ssl"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Virtual Server",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "48669d28-fb79-47ba-bfcb-c644605ed5ec",
+								"type": "text/javascript",
+								"exec": [
+									"eval(postman.getGlobalVariable(\"_f5_workflow_functions\"));",
+									"",
+									"var check_vals = [",
+									"        { ",
+									"            \"path\":\"evalOrder\",",
+									"            \"value\":\"5\"",
+									"        }",
+									"    ];",
+									"",
+									"f5_check_response(check_vals);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-F5-REST-Coordination-Id",
+								"value": "{{bigip_transaction_id}}"
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{bigip_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\":\"{{app_name}}-vs\",\n    \"destination\":\"{{app_ip}}:443\",\n    \"ipProtocol\":\"tcp\",\n    \"pool\":\"{{app_name}}-pool\",\n    \"sourceAddressTranslation\": { \"type\":\"automap\" },\n    \"profiles\": [\n        { \"name\":\"/Common/{{app_name}}-clientssl\", \"context\":\"clientside\" },\n        { \"name\":\"/Common/serverssl\", \"context\":\"serverside\" },\n        \"/Common/tcp-wan-optimized\",\n        \"/Common/http\",\n        \"/Common/{{app_name}}-rewrite\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "https://{{bigip_mgmt}}/mgmt/tm/ltm/virtual",
+							"protocol": "https",
+							"host": [
+								"{{bigip_mgmt}}"
+							],
+							"path": [
+								"mgmt",
+								"tm",
+								"ltm",
+								"virtual"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check Queue",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "b17d5157-2b9e-4ebc-b8f1-2b0e72818649",
+								"type": "text/javascript",
+								"exec": [
+									"eval(postman.getGlobalVariable(\"_f5_workflow_functions\"));",
+									"",
+									"var check_vals = [",
+									"        { ",
+									"            \"path\":\"items\",",
+									"            \"value\":\"5\",",
+									"            \"op\":\"length\"",
+									"        }",
+									"    ];",
+									"",
+									"f5_check_response(check_vals);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{bigip_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n}"
+						},
+						"url": {
+							"raw": "https://{{bigip_mgmt}}/mgmt/tm/transaction/{{bigip_transaction_id}}/commands",
+							"protocol": "https",
+							"host": [
+								"{{bigip_mgmt}}"
+							],
+							"path": [
+								"mgmt",
+								"tm",
+								"transaction",
+								"{{bigip_transaction_id}}",
+								"commands"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Commit Transaction",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"eval(postman.getGlobalVariable(\"_f5_workflow_functions\"));",
+									"",
+									"var check_vals = [",
+									"        { ",
+									"            \"path\":\"kind\",",
+									"            \"value\":\"tm:transactionstate\"",
+									"        }",
+									"    ];",
+									"",
+									"f5_check_response(check_vals);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{bigip_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"state\":\"VALIDATING\"\n}"
+						},
+						"url": {
+							"raw": "https://{{bigip_mgmt}}/mgmt/tm/transaction/{{bigip_transaction_id}}",
+							"protocol": "https",
+							"host": [
+								"{{bigip_mgmt}}"
+							],
+							"path": [
+								"mgmt",
+								"tm",
+								"transaction",
+								"{{bigip_transaction_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check Status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"eval(postman.getGlobalVariable(\"_f5_workflow_functions\"));",
+									"",
+									"var check_vals = [",
+									"        { ",
+									"            \"path\":\"state\",",
+									"            \"value\":\"COMPLETED\"",
+									"        }",
+									"    ];",
+									"",
+									"f5_check_response(check_vals);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{bigip_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n}"
+						},
+						"url": {
+							"raw": "https://{{bigip_mgmt}}/mgmt/tm/transaction/{{bigip_transaction_id}}",
+							"protocol": "https",
+							"host": [
+								"{{bigip_mgmt}}"
+							],
+							"path": [
+								"mgmt",
+								"tm",
+								"transaction",
+								"{{bigip_transaction_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Add WAF Policy",
+			"description": "",
+			"item": [
+				{
+					"name": "Get WAF Templates",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "59dc12e2-5ee0-4d77-8149-230f77075790",
+								"type": "text/javascript",
+								"exec": [
+									"eval(postman.getGlobalVariable(\"_f5_workflow_functions\"));",
+									"",
+									"f5_check_response_code();"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{bigip_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{bigip_mgmt}}/mgmt/tm/asm/policy-templates",
+							"protocol": "https",
+							"host": [
+								"{{bigip_mgmt}}"
+							],
+							"path": [
+								"mgmt",
+								"tm",
+								"asm",
+								"policy-templates"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create WAF Policy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "72276af9-aa66-4f95-a1cf-8285aa2425a4",
+								"type": "text/javascript",
+								"exec": [
+									"eval(postman.getGlobalVariable(\"_f5_workflow_functions\"));",
+									"",
+									"f5_check_response_code();",
+									"",
+									"var populate_vars = [",
+									"        {name:\"asm_policy_hash\", value:\"id\"}",
+									"    ];",
+									"    ",
+									"f5_populate_env_vars(populate_vars);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{bigip_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\":\"{{app_name}}-waf\",\n    \"description\":\"{{app_name}} Security Policy\",\n    \"templateReference\": {\"link\": \"{{waf_template}}\"}\n}"
+						},
+						"url": {
+							"raw": "https://{{bigip_mgmt}}/mgmt/tm/asm/policies",
+							"protocol": "https",
+							"host": [
+								"{{bigip_mgmt}}"
+							],
+							"path": [
+								"mgmt",
+								"tm",
+								"asm",
+								"policies"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add WAF Policy to Virtual Server",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "736d7348-a358-4551-a868-97a42d289223",
+								"type": "text/javascript",
+								"exec": [
+									"eval(postman.getGlobalVariable(\"_f5_workflow_functions\"));",
+									"",
+									"f5_check_response_code();"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{bigip_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"virtualServers\":[\"/Common/{{app_name}}-vs\"]\n}"
+						},
+						"url": {
+							"raw": "https://{{bigip_mgmt}}/mgmt/tm/asm/policies/{{asm_policy_hash}}",
+							"protocol": "https",
+							"host": [
+								"{{bigip_mgmt}}"
+							],
+							"path": [
+								"mgmt",
+								"tm",
+								"asm",
+								"policies",
+								"{{asm_policy_hash}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add WAF Logging to Virtual Server",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "4a8d1b7e-8e21-48e4-a99b-22a29502e968",
+								"type": "text/javascript",
+								"exec": [
+									"eval(postman.getGlobalVariable(\"_f5_workflow_functions\"));",
+									"",
+									"f5_check_response_code();"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{bigip_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"securityLogProfiles\": [\n        \"Log illegal requests\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "https://{{bigip_mgmt}}/mgmt/tm/ltm/virtual/{{app_name}}-vs",
+							"protocol": "https",
+							"host": [
+								"{{bigip_mgmt}}"
+							],
+							"path": [
+								"mgmt",
+								"tm",
+								"ltm",
+								"virtual",
+								"{{app_name}}-vs"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get VS Data",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "59dc12e2-5ee0-4d77-8149-230f77075790",
+								"type": "text/javascript",
+								"exec": [
+									"eval(postman.getGlobalVariable(\"_f5_workflow_functions\"));",
+									"",
+									"f5_check_response_code();"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-F5-Auth-Token",
+								"value": "{{bigip_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://{{bigip_mgmt}}/mgmt/tm/ltm/virtual/{{app_name}}-vs",
+							"protocol": "https",
+							"host": [
+								"{{bigip_mgmt}}"
+							],
+							"path": [
+								"mgmt",
+								"tm",
+								"ltm",
+								"virtual",
+								"{{app_name}}-vs"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "03247f19-7df2-4abf-bca1-058a4365fef6",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "491d91e0-a601-4232-af84-e30e74257454",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "c4da96d7-0d1a-4dfd-9a3a-a37861cbf7e4",
+			"key": "monitor_send_string",
+			"value": "GET /{{aws_apigateway_stage}}{{monitor_uri}} HTTP/1.1\\r\\nHost: {{aws_apigateway_dnsname}}\\r\\nConnection: Close\\r\\n\\r\\n",
+			"type": "string",
+			"description": ""
+		},
+		{
+			"id": "137e77e4-ec2f-4ce4-9a1a-d4d8964e6844",
+			"key": "aws_apigateway_dnsname",
+			"value": "{{aws_apigateway_deploymentid}}.execute-api.{{aws_region}}.amazonaws.com",
+			"type": "string",
+			"description": ""
+		}
+	]
+}
