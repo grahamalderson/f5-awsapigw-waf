@@ -1,6 +1,9 @@
 # f5-awsapigw-waf
 Postman collection and environment to quickly deploy WAF protection in front of AWS API Gateway onto an existing F5 BIG-IP.
 
+More information here:
+https://devcentral.f5.com/articles/protect-your-aws-api-gateway-with-f5-big-ip-waf-30667
+
 You can download and import this collection and environment, fill in the required variables, and it will do all the work for you in a few seconds. You can take it a step farther and automate deployment and configuration of the BIG-IP in AWS if you want, but this simple collection assumes you already have a BIG-IP deployed and have assigned an IP that you want to use. You’ll import the collection and the environment. Open up the environment and set the variables noted below.
 
 You’ll need to fill in the relevant environment variables. Here’s a quick set of definitions:
@@ -40,3 +43,4 @@ If you’re using a single NIC, you’ll need to alter the calls because they as
 WAF_template variable
 
 If you’re not running v13.1.0 or you want a different template, you will need to change this value in the Postman environment. To determine the proper value, run the “Authenticate and Obtain Token” then the "Get WAF Templates” requests. Review the JSON response and the profiles available. If an API Security profile is available on your version, that’s a good choice, otherwise you could choose a rapid deployment policy, fundamental, or other. The value you’re looking for is the “selfLink” within the policy context you desire. If you simply remove the templateReference from the "Create WAF Policy” request body then you will get the default fundamental policy and the default settings it provides which can change a lot so please review.
+
