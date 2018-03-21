@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "1b968083-9052-4dbc-b0e7-639b0cd21656",
+		"_postman_id": "591622d8-76d6-48c0-b5da-c1a9d16d2063",
 		"name": "F5-AWSAPIGW-WAFDEPLOY",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -179,7 +179,7 @@
 		},
 		{
 			"name": "Build the Virtual Server",
-			"description": "",
+			"description": null,
 			"item": [
 				{
 					"name": "Create Transaction",
@@ -215,7 +215,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\t\n}"
+							"raw": "{\n  \n}"
 						},
 						"url": {
 							"raw": "https://{{bigip_mgmt}}/mgmt/tm/transaction",
@@ -273,7 +273,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\":\"{{app_name}}-rewrite\",\n\t\"rewrite-mode\":\"uri-translation\",\n\t\"uriRulesReference\": {\n        \"items\": [\n            {\n                \"name\": \"apigw-rule\",\n                \"client\": {\n                    \"host\": \"{{app_dnsname}}\",\n                    \"path\": \"/\",\n                    \"scheme\": \"https\"\n                },\n                \"server\": {\n                    \"host\": \"{{aws_apigateway_dnsname}}\",\n                    \"path\": \"/\",\n                    \"scheme\": \"https\"\n                },\n                \"type\": \"request\"\n            }\n        ]\n\t}\n}"
+							"raw": "{\n    \"name\":\"{{app_name}}-rewrite\",\n  \"rewrite-mode\":\"uri-translation\",\n  \"uriRulesReference\": {\n        \"items\": [\n            {\n                \"name\": \"apigw-rule\",\n                \"client\": {\n                    \"host\": \"{{app_dnsname}}\",\n                    \"path\": \"/\",\n                    \"scheme\": \"https\"\n                },\n                \"server\": {\n                    \"host\": \"{{aws_apigateway_dnsname}}\",\n                    \"path\": \"/\",\n                    \"scheme\": \"https\"\n                },\n                \"type\": \"request\"\n            }\n        ]\n  }\n}"
 						},
 						"url": {
 							"raw": "https://{{bigip_mgmt}}/mgmt/tm/ltm/profile/rewrite",
@@ -333,7 +333,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\":\"{{app_name}}-monitor\",\n    \"send\":\"{{monitor_send_string}}\",\n    \"recv\":\"{{monitor_receive_string}}\"\n}"
+							"raw": "{\n    \"name\":\"{{app_name}}-monitor\",\n    \"send\":\"GET {{monitor_uri}} HTTP/1.1\\r\\nHost: {{aws_apigateway_dnsname}}\\r\\nConnection: Close\\r\\n\\r\\n\",\n    \"recv\":\"{{monitor_receive_string}}\"\n}"
 						},
 						"url": {
 							"raw": "https://{{bigip_mgmt}}/mgmt/tm/ltm/monitor/https",
@@ -393,7 +393,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\":\"{{app_name}}-pool\",\n    \"monitor\":\"/Common/{{app_name}}-monitor\",\n    \"members\":[ {\n    \t\"fqdn\": {\n    \t\t\"autopopulate\":\"enabled\",\n    \t\t\"tmName\": \"{{aws_apigateway_dnsname}}\"\n    \t},\n    \t\"name\": \"{{aws_apigateway_dnsname}}:443\"\n    }]\n}"
+							"raw": "{\n    \"name\":\"{{app_name}}-pool\",\n    \"monitor\":\"/Common/{{app_name}}-monitor\",\n    \"members\":[ {\n      \"name\": \"{{app_name}}-node:443\",\n      \"fqdn\": {\n        \"autopopulate\":\"enabled\",\n        \"tmName\": \"{{aws_apigateway_dnsname}}\"\n      }\n    }]\n}"
 						},
 						"url": {
 							"raw": "https://{{bigip_mgmt}}/mgmt/tm/ltm/pool",
@@ -699,7 +699,7 @@
 		},
 		{
 			"name": "Add WAF Policy",
-			"description": "",
+			"description": null,
 			"item": [
 				{
 					"name": "Get WAF Templates",
@@ -707,12 +707,34 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "59dc12e2-5ee0-4d77-8149-230f77075790",
+								"id": "86afe0f0-0366-492d-9adc-ed17f6ef09b9",
 								"type": "text/javascript",
 								"exec": [
 									"eval(postman.getGlobalVariable(\"_f5_workflow_functions\"));",
 									"",
-									"f5_check_response_code();"
+									"f5_check_response_code();",
+									"",
+									"pm.test(\"WAF Policy template\", function () {",
+									"var response = JSON.parse(responseBody);",
+									"var items = response.items;",
+									"var size = items.length;",
+									"for (var i = 0; i < size; i++) {",
+									"    if (items[i].name === 'POLICY_TEMPLATE_API_SECURITY') {",
+									"        console.log(\"API Security template found: \" + items[i].name);",
+									"     pm.environment.set(\"waf_template\", items[i].selfLink);",
+									"     break;",
+									"    } else if (items[i].name === 'POLICY_TEMPLATE_RAPID_DEPLOYMENT') {",
+									"        console.log(\"No API Security Template found. Using Rapid Deployment Template instead: \" + items[i].name);",
+									"     pm.environment.set(\"waf_template\", items[i].selfLink);",
+									"    } else {}",
+									"}",
+									"});",
+									"",
+									"pm.test(\"WAF Template variable set\", function () {",
+									"   var policy_tmpl = pm.environment.get(\"waf_template\");",
+									"   pm.expect(policy_tmpl).to.not.be.undefined;",
+									"});",
+									""
 								]
 							}
 						}
@@ -973,22 +995,6 @@
 					""
 				]
 			}
-		}
-	],
-	"variable": [
-		{
-			"id": "c4da96d7-0d1a-4dfd-9a3a-a37861cbf7e4",
-			"key": "monitor_send_string",
-			"value": "GET /{{aws_apigateway_stage}}{{monitor_uri}} HTTP/1.1\\r\\nHost: {{aws_apigateway_dnsname}}\\r\\nConnection: Close\\r\\n\\r\\n",
-			"type": "string",
-			"description": ""
-		},
-		{
-			"id": "137e77e4-ec2f-4ce4-9a1a-d4d8964e6844",
-			"key": "aws_apigateway_dnsname",
-			"value": "{{aws_apigateway_deploymentid}}.execute-api.{{aws_region}}.amazonaws.com",
-			"type": "string",
-			"description": ""
 		}
 	]
 }
