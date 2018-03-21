@@ -25,15 +25,25 @@ You can download and import this collection and environment, fill in the require
 You’ll need to fill in the relevant environment variables. Here’s a quick set of definitions:
 
 bigip_username: your username
+
 bigip_password: your password
+
 bigip_mgmt: management IP of your BIG-IP, use the elastic IP pointing to the management interface so you can reach it
+
 monitor_receive_string: a string you expect to receive to indicate success at the below URI
+
 monitor_uri: the URI you want to monitor, remember that the AWS Api GW stage name will prefix it like /
+
 app_dnsname: the FQDN you will point at the BIG-IP, in the below example I’m using “my-desired-fqdn.com”
+
 aws_apigateway_dnsname: the DNS name used by AWS API gateway for your API
+
 app_ip: the IP you want to use for the virtual server to receive traffic, this is a secondary IP assigned to your traffic network interface
+
 app_name: This will be used as a prefix in the name for all objects created so you can easily identify them
+
 cert_name: You can leave this as “default.crt” for a self-signed or select an SSL certificate uploaded to the BIG-IP
+
 key_name: You can leave this as “default.key” for a self-signed or select an SSL key you uploaded to the BIG-IP
 
 Note
