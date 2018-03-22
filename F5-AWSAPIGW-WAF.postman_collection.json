@@ -718,7 +718,7 @@
 									"var response = JSON.parse(responseBody);",
 									"var items = response.items;",
 									"var size = items.length;",
-									"for (var i = 0; i < size; i++) {",
+									"for (var i = 0; i <= size; i++) {",
 									"    if (items[i].name === 'POLICY_TEMPLATE_API_SECURITY') {",
 									"        console.log(\"API Security template found: \" + items[i].name);",
 									"     pm.environment.set(\"waf_template\", items[i].selfLink);",
