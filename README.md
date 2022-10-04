@@ -1,3 +1,7 @@
+This is woefully out of date and better methods should be used. Archiving.
+
+
+
 # f5-awsapigw-waf
 Postman collection and environment to quickly deploy WAF protection in front of AWS API Gateway onto an existing F5 BIG-IP.
 
